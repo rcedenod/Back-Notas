@@ -3,7 +3,7 @@
         {
             "getUser" : "select us.id_user, us.email, us.password, pr.fk_id_profile from security.user us INNER JOIN security.user_profile pr ON us.id_user = pr.fk_id_user where us.email = $1",
             "createPerson" : "INSERT INTO public.person (name, last_name, birth_date) VALUES ($1, $2, $3) RETURNING id_person",
-            "createNote": "INSERT INTO note() VALUES () RETURNING id_note",
+            "createNote": "INSERT INTO notes(title, description, date, private, fk_id_user) VALUES ($1,$2,$3,$4,$5) RETURNING id_note",
             "updateNote": "",
             "deleteNotes": "DELETE FROM note WHERE id_note = ANY($1::int[])",
             "getUserNotes": "",

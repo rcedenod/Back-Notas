@@ -26,7 +26,7 @@ const NoteBO = class {
             params.title,
             params.description,
             dayjs().format('YYYY-MM-DD'),
-            params.id_state,
+            params.privacy,
             ss.sessionObject.userId
         ]);
         if (result && result.rowCount > 0) {

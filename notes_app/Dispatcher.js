@@ -279,6 +279,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
 
   app.post('/ToProcess', async function (req, res) {
     if(ss.sessionExist(req)){
+    /*
       if(sc.hasPermissionMethod({
         profile: req.session.profile,
         objectName: req.body.objectName,
@@ -291,6 +292,9 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       else {
         res.send({sts:false, msg:'No tiene permisos para ejecutar el metodo...'});
       }
+    */
+      let r = await sc.exeMethod(req);
+      res.send(JSON.stringify(r));
       
     } else {
       res.send({sts:false, msg:'debe hacer login...'});
