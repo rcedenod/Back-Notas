@@ -1,34 +1,40 @@
-const CategoryBO = class {
+const FolderBO = class {
 
     constructor() {}
     
-    async getCategories(params){
+    async getUserFolders(params){
         try {
-            const result = await database.executeQuery("public", "getCategories", []);
+            const result = await database.executeQuery("public", "getUserFolders", [
+              ss.sessionObject.userId
+            ]);
         
             if (!result || !result.rows) {
               console.error("La consulta no devolvio resultados");
-              return { sts: false, msg: "Error al obtener categorias" };
+              return { sts: false, msg: "Error al obtener carpetas del usuario" };
             }
         
             return { sts: true, data: result.rows };
+            
           } catch (error) {
             console.error("Error en getCategories:", error);
             return { sts: false, msg: "Error al ejecutar la consulta" };
           }
     }
   
-    async createCategory(params) {
+    async createFolder(params) {
       try {
-        const result = await database.executeQuery("public", "createCategory", [params.categoryName]);
+        const result = await database.executeQuery("public", "createFolder", [
+          params.folderName,
+          ss.sessionObject.userId
+        ]);
         if (result && result.rowCount > 0) {
-          return { sts: true, msg: "Categoria creada correctamente" };
+          return { sts: true, msg: "  Carpeta creada correctamente" };
         } else {
-          return { sts: false, msg: "No se pudo crear la categoria" };
+          return { sts: false, msg: "No se pudo crear la carpeta" };
         }
       } catch (error) {
-        console.error("Error en createCategory:", error);
-        return { sts: false, msg: "Error al crear la categoria" };
+        console.error("Error en createFolder:", error);
+        return { sts: false, msg: "Error al crear la carpeta" };
       }
     }
 
@@ -39,13 +45,13 @@ const CategoryBO = class {
           params.categoryName
         ]);
         if (result && result.rowCount > 0) {
-          return { sts: true, msg: "Categoria actualizada correctamente" };
+          return { sts: true, msg: "carpeta actualizada correctamente" };
         } else {
-          return { sts: false, msg: "No se pudo actualizar las categorias" };
+          return { sts: false, msg: "No se pudo actualizar las carpetas" };
         }
       } catch (error) {
         console.error("Error en updateCategory:", error);
-        return { sts: false, msg: "Error al actualizar las categorias" };
+        return { sts: false, msg: "Error al actualizar las carpetas" };
       }
     }
 
@@ -53,15 +59,15 @@ const CategoryBO = class {
       try {
         const result = await database.executeQuery("public", "deleteCategories", [params.ids]);
         if (result && result.rowCount > 0) {
-          return { sts: true, msg: "Categorias eliminadas correctamente" };
+          return { sts: true, msg: "carpetas eliminadas correctamente" };
         } else {
-          return { sts: false, msg: "No se pudo eliminar las categorias" };
+          return { sts: false, msg: "No se pudo eliminar las carpetas" };
         }
       } catch (error) {
         console.error("Error en deleteCategories:", error);
-        return { sts: false, msg: "Error al eliminar las categorias" };
+        return { sts: false, msg: "Error al eliminar las carpetas" };
       }
     }
 }
 
-module.exports = CategoryBO;
+module.exports = FolderBO;
