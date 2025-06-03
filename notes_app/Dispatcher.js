@@ -92,8 +92,8 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       try {
           await ss.closeSession(req);
           // Limpia la cookie (el nombre por defecto es "connect.sid")
-          res.clearCookie('connect.sid');
-          res.send("Logout ok!");
+          // res.clearCookie('connect.sid');
+          res.json({ sts: true, msg: "Logout exitoso" });
       } catch (error) {
           res.status(500).send("Error al cerrar la sesión");
       }
@@ -131,7 +131,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       ]);
       if (userResult && userResult.rowCount > 0) {
         console.log(`El usuario: ${email} fue creado correctamente`);
-        return res.json({ sts: true, msg: "Usuario creado correctamente" });
+        return ;
       } else {
         return res.status(500).json({ sts: false, msg: "No se pudo crear el usuario" });
       }
