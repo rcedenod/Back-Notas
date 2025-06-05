@@ -67,7 +67,10 @@ const NoteBO = class {
               params.description,
               dayjs().format('YYYY-MM-DD'),
               params.privacy,
-              ss.sessionObject.userId
+              ss.sessionObject.userId,
+              params.favorite,
+              params.content,
+              params.id_weight
           ]);
 
           if (result && result.rowCount > 0) {
@@ -100,12 +103,22 @@ const NoteBO = class {
     }
 
     async updateNote(params) {
+      console.log('-------------------------------------');
+      console.log(`title: ${params.title}`);
+      console.log(`desc: ${params.description}`);
+      console.log(`priv: ${params.privacy}`);
+      console.log(`cont: ${params.content}`);
+      console.log(`we: ${params.id_weight}`);
+      console.log(`idnot: ${params.id_note}`);
+      console.log('-------------------------------------');
       try {
         const result = await database.executeQuery("public", "updateNote", [
-          params.id_note, 
           params.title, 
           params.description,
-          params.id_state,
+          params.privacy,
+          params.content,
+          params.id_weight,
+          params.id_note
         ]);
         if (result && result.rowCount > 0) {
           return { sts: true, msg: "Nota actualizada correctamente" };
