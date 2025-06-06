@@ -91,8 +91,8 @@ const UserBO = class {
     async updateUser(params) {
       try {
         // Se espera recibir los siguientes parámetros:
-        const { id_user, id_person, name, lastName, email, password } = params;
-        if (!id_user || !id_person || !name || !lastName || !email || !password) {
+        const { id_user, id_person, name, lastName, email, password, username } = params;
+        if (!id_user || !id_person || !name || !lastName || !email || !password || !username) {
           console.log("params: ", params);
           return { sts: false, msg: "Faltan datos obligatorios" };
         }
@@ -112,6 +112,7 @@ const UserBO = class {
         const userResult = await database.executeQuery("security", "updateUser", [
           email,
           password,
+          username,
           id_user
         ]);
         if (!userResult || userResult.rowCount === 0) {
