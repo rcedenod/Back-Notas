@@ -23,6 +23,23 @@ const NoteBO = class {
           }
     }
 
+    async getPublicNotes(params){
+        try {
+            const result = await database.executeQuery("public", "getPublicNotes", []);
+        
+            if (!result || !result.rows) {
+              console.error("La consulta no devolvio resultados");
+              return { sts: false, msg: "Error al obtener notas publicas" };
+            }
+      
+            return { sts: true, data: result.rows };
+
+          } catch (error) {
+            console.error("Error en getPublicNotes:", error);
+            return { sts: false, msg: "Error al ejecutar la consulta" };
+          }
+    }
+
     async getFavUserNotes(params){
         try {
             const result = await database.executeQuery("public", "getFavUserNotes", [
@@ -68,7 +85,6 @@ const NoteBO = class {
               dayjs().format('YYYY-MM-DD'),
               params.privacy,
               ss.sessionObject.userId,
-              params.favorite,
               params.content,
               params.id_weight
           ]);
@@ -131,17 +147,31 @@ const NoteBO = class {
       }
     }
 
-    async deleteNotes(params) {
+    async deleteNote(params) {
       try {
-        const result = await database.executeQuery("public", "deleteNotes", [params.ids]);
-        if (result && result.rowCount > 0) {
-          return { sts: true, msg: "Notas eliminadas correctamente" };
+        const resultFolder = await database.executeQuery("public", "deleteNoteFromFolder", [params.noteId]);
+        if (resultFolder) {
+          console.log("Nota eliminada de la/s carpetas");
         } else {
-          return { sts: false, msg: "No se pudo eliminar las notas" };
+          return { sts: false, msg: "No se pudo eliminar la nota de la/s carpeta/s" };
+        }
+
+        const resultFavs = await database.executeQuery("public", "deleteNoteFromFavs", [params.noteId]);
+        if (resultFavs) {
+          console.log("Nota eliminada de favoritos");
+        } else {
+          return { sts: false, msg: "No se pudo eliminar la nota de favoritosla/s carpeta/s" };
+        }
+
+        const result = await database.executeQuery("public", "deleteNote", [params.noteId]);
+        if (result) {
+          return { sts: true, msg: "Nota eliminada correctamente" };
+        } else {
+          return { sts: false, msg: "No se pudo eliminar la nota" };
         }
       } catch (error) {
-        console.error("Error en deleteNotes:", error);
-        return { sts: false, msg: "Error al eliminar las notas" };
+        console.error("Error en deleteNote:", error);
+        return { sts: false, msg: "Error al eliminar la nota" };
       }
     }
 }

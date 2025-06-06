@@ -55,17 +55,29 @@ const FolderBO = class {
       }
     }
 
-    async deleteCategories(params) {
+    async deleteFolder(params) {
       try {
-        const result = await database.executeQuery("public", "deleteCategories", [params.ids]);
-        if (result && result.rowCount > 0) {
-          return { sts: true, msg: "carpetas eliminadas correctamente" };
-        } else {
-          return { sts: false, msg: "No se pudo eliminar las carpetas" };
+        const resultNotes = await database.executeQuery("public", "deleteFolderNotes", [
+          params.folderId
+        ])
+
+        if (!resultNotes) {
+          return { sts: false, msg: "No se pudieron eliminar las notas de la carpeta" };
         }
+      
+        const result = await database.executeQuery("public", "deleteFolder", [
+          params.folderId
+        ]);
+
+        if (!result) {
+          return { sts: false, msg: "No se pudo eliminar la carpeta" };
+        }
+
+        return { sts: true, msg: "Carpeta eliminada exitosamente" };
+
       } catch (error) {
-        console.error("Error en deleteCategories:", error);
-        return { sts: false, msg: "Error al eliminar las carpetas" };
+        console.error("Error en deleteFolders:", error);
+        return { sts: false, msg: "Error al eliminar la carpeta" };
       }
     }
 }
