@@ -30,7 +30,7 @@ class DataBase {
             return response;
         } catch (e) {
             console.error("Error ejecutando la consulta:", e.stack || e);
-            return null;
+            throw e;
         } finally {
             if (connection) connection.release();
         }

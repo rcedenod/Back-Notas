@@ -21,14 +21,19 @@
             "deleteFolderNotes": "DELETE FROM category_note WHERE fk_id_category = $1",
             "assignNoteFolder": "INSERT INTO category_note(fk_id_note, fk_id_category) values($1, $2)",
             "getPeople": "SELECT p.id_person, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname FROM person as p",
-            "updatePerson": "UPDATE public.person SET name = $1, last_name = $2, birth_date = $3 WHERE id_person = $4",
-            "deletePerson": "DELETE FROM public.person WHERE id_person =  ANY($1::int[])"
+            "updatePerson": "UPDATE public.person SET name = $1, last_name = $2 WHERE id_person = $3",
+            "deletePerson": "DELETE FROM public.person WHERE id_person =  ANY($1::int[])",
+            "getPersonById": "SELECT * FROM public.person as p INNER JOIN security.user as u ON u.fk_id_person = p.id_person WHERE u.id_user = $1",
+            "getAllNotesUser": "SELECT n.id_note FROM notes n WHERE n.fk_id_user = ANY($1::int[])",
+            "deleteFavoritesByNoteIds": "DELETE FROM favorites WHERE fk_id_note = ANY($1::int[])",
+            "deleteCategoryNoteByNoteIds": "DELETE FROM category_note WHERE fk_id_note = ANY($1::int[])",
+            "deleteNotesByUserIds": "DELETE FROM notes WHERE fk_id_user = ANY($1::int[])"
         },
     "security":
         {
             "loadPermission" : "SELECT pr.id_profile, ob.id_object, ob.object, me.id_method, me.method FROM security.permission_method pm INNER JOIN security.profile pr ON pm.fk_id_profile = pr.id_profile INNER JOIN security.method me ON pm.fk_id_method = me.id_method INNER JOIN security.object ob ON me.fk_id_object = ob.id_object",
             "loadMenu" : "SELECT pr.id_profile, me.menu, me.fk_id_module FROM security.permission_menu pm  INNER JOIN security.profile pr ON pm.fk_id_profile = pr.id_profile INNER JOIN security.menu me ON pm.fk_id_menu = me.id_menu",
-            "createUser" : "INSERT INTO security.user (email, password, number_id, fk_id_person) VALUES ($1, $2, $3, $4) RETURNING id_user",
+            "createUser" : "INSERT INTO security.user (email, password, username, fk_id_person) VALUES ($1, $2, $3, $4) RETURNING id_user",
             "updatePassword": "UPDATE security.user SET password = $1 WHERE email = $2",
             "getUserByNumberAndPassword": "SELECT * FROM security.user WHERE number_id = $1 AND password = $2",
             "updateUserEmail": "UPDATE security.user SET email = $1 WHERE number_id = $2 AND password = $3",
@@ -39,7 +44,7 @@
             "deleteProfiles": "DELETE FROM security.profile WHERE id_profile = ANY($1::int[])",
             "getUsers": "SELECT us.id_user, pe.id_person,pe.name, pe.last_name, us.email, pr.profile, pr.id_profile, pe.birth_date, us.number_id FROM security.user us INNER JOIN public.person pe ON pe.id_person = us.fk_id_person INNER JOIN security.user_profile uspr ON uspr.fk_id_user = us.id_user INNER JOIN security.profile pr ON pr.id_profile = uspr.fk_id_profile",
             "createUserProfile": "INSERT INTO security.user_profile (fk_id_user, fk_id_profile) VALUES ($1, $2)",
-            "updateUser": "UPDATE security.user SET email = $1, number_id = $2 WHERE id_user = $3",
+            "updateUser": "UPDATE security.user SET email = $1, password = $2 WHERE id_user = $3",
             "updateUserProfile": "UPDATE security.user_profile SET fk_id_profile = $1 WHERE fk_id_user = $2",
             "deleteUserProfileByUserId": "DELETE FROM security.user_profile WHERE fk_id_user =  ANY($1::int[])",
             "deleteUser": "DELETE FROM security.user WHERE id_user = ANY($1::int[])",

@@ -28,7 +28,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
     await ss.authenticateUser(req);
 
     if (!ss.sessionObject.status) {
-        return res.status(401).json({ sts: false, msg: "Datos inválidos" });
+        return res.status(401).json({ sts: false, msg: "Correo o contraseña inválidos" });
     }
     
     // Buscar los perfiles del usuario
@@ -99,47 +99,104 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
       }
   });
 
-  app.post('/createUser', async (req, res) => {
-    try {
-      // Extraer y validar los datos enviados
-      const { name, last_name, birth_date, email, password, number_id } = req.body;
-      if (!name || !last_name || !birth_date || !email || !password || !number_id) {
-        return res.status(400).json({ sts: false, msg: "Faltan datos obligatorios" });
-      }
-  
-      // Insertar la persona en la tabla public.person
-      let personResult = await database.executeQuery("public", "createPerson", [name, last_name, birth_date]);
-      if (!personResult || !personResult.rows || personResult.rows.length === 0) {
-        return res.status(500).json({ sts: false, msg: "No se pudo crear la persona" });
-      }
-      
-      // Obtener el id_person generado
-      const id_person = personResult.rows[0].id_person;
-      console.log(`Persona creada con id_person: ${id_person}`);
-      
-      // Insertar el usuario en la tabla security.user
-      let userResult = await database.executeQuery("security", "createUser", [email, password, number_id, id_person]);
+app.post('/createUser', async (req, res) => {
+  try {
+    // 1) Validación de campos obligatorios
+    const { name, last_name, birth_date, email, password, userName } = req.body;
+    if (!name || !last_name || !birth_date || !email || !password || !userName) {
+      return res
+        .status(400)
+        .json({ sts: false, msg: 'Faltan datos obligatorios' });
+    }
 
-      // Obtener el id del usuario recién creado
+    // 2) Insertar en public.person y obtener id_person
+    const personResult = await database.executeQuery(
+      'public',
+      'createPerson',
+      [name, last_name, birth_date]
+    );
+    if (
+      !personResult ||
+      !personResult.rows ||
+      personResult.rows.length === 0
+    ) {
+      return res
+        .status(500)
+        .json({ sts: false, msg: 'No se pudo crear la persona' });
+    }
+    const id_person = personResult.rows[0].id_person;
+    console.log(`Persona creada con id_person: ${id_person}`);
+
+    // 3) Bloque try/catch exclusivo para el INSERT en security.user
+    try {
+      const userResult = await database.executeQuery(
+        'security',
+        'createUser',
+        [email, password, userName, id_person]
+      );
+
       const id_user = userResult.rows[0].id_user;
       const id_profile = 5;
 
-      // Insertar en la tabla user_profile para asignar el perfil al usuario
-      const userProfileResult = await database.executeQuery("security", "createUserProfile", [
-        id_user,
-        id_profile
-      ]);
-      if (userResult && userResult.rowCount > 0) {
-        console.log(`El usuario: ${email} fue creado correctamente`);
-        return ;
+      // 4) Insertar en user_profile para asignar perfil
+      const userProfileResult = await database.executeQuery(
+        'security',
+        'createUserProfile',
+        [id_user, id_profile]
+      );
+
+      if (userProfileResult && userProfileResult.rowCount > 0) {
+        console.log(`El usuario ${email} fue creado correctamente`);
+        return res.json({
+          sts: true,
+          msg: 'Usuario creado correctamente',
+        });
       } else {
-        return res.status(500).json({ sts: false, msg: "No se pudo crear el usuario" });
+        return res
+          .status(500)
+          .json({ sts: false, msg: 'No se pudo asignar el perfil' });
       }
     } catch (error) {
-      console.error("Error en createUser endpoint:", error);
-      return res.status(500).json({ sts: false, msg: "Error al crear el usuario" });
+      console.log('Error al crear el usuario:', error.message);
+      
+      // 5) Aquí caen TODOS los errores que deriven de createUser(...)
+      if (
+        error.message &&
+        error.message.includes('duplicate key value') &&
+        error.message.includes('unq_email')
+      ) {
+        return res
+          .status(400)
+          .json({ sts: false, msg: 'El email ya está registrado' });
+      }
+
+      if (
+        error.message &&
+        error.message.includes('duplicate key value') &&
+        error.message.includes('unq_username')
+      ) {
+        return res
+          .status(400)
+          .json({ sts: false, msg: 'El nombre de usuario ya está en uso' });
+      }
+
+      //Si no era duplicado de email ni de username
+      console.error('Error al crear el usuario:', error);
+      return res
+        .status(500)
+        .json({ sts: false, msg: 'Error al crear el usuario' });
     }
-  });
+  } catch (error) {
+    // 6) Cualquier otro error
+    console.error('Error en createUser endpoint:', error);
+    return res
+      .status(500)
+      .json({ sts: false, msg: 'Error al procesar la petición' });
+  }
+});
+
+
+
 
   // Endpoint: Enviar código de restablecimiento de contraseña
   app.post('/resetPassword', async (req, res) => {
@@ -271,7 +328,7 @@ global.database = new (require('./DataBase'))(() => {global.sc = new (require('.
 
   app.get('/checkSession', (req, res) => {
     if (ss.sessionExist(req)) {
-      res.json({ authenticated: true });
+      res.json({ authenticated: true, session: req.session });
     } else {
       res.json({ authenticated: false });
     }
