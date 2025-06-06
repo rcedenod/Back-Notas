@@ -134,6 +134,7 @@ const NoteBO = class {
           params.privacy,
           params.content,
           params.id_weight,
+          params.date,
           params.id_note
         ]);
         if (result && result.rowCount > 0) {
