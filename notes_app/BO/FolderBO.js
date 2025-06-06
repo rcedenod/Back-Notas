@@ -20,7 +20,7 @@ const FolderBO = class {
             return { sts: false, msg: "Error al ejecutar la consulta" };
           }
     }
-  
+    
     async createFolder(params) {
       try {
         const result = await database.executeQuery("public", "createFolder", [

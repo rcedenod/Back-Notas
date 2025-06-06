@@ -99,8 +99,8 @@ const NoteBO = class {
 
         if (params.folderId != 0){
           const resultCategory = await database.executeQuery("public", "assignNoteFolder", [
-            id_note,
-            params.folderId
+            params.folderId,
+            id_note
           ])
 
           if (resultCategory && resultCategory.rowCount > 0) {
@@ -172,6 +172,27 @@ const NoteBO = class {
       } catch (error) {
         console.error("Error en deleteNote:", error);
         return { sts: false, msg: "Error al eliminar la nota" };
+      }
+    }
+
+    async deleteNotes(params) {
+      try {
+        const resultFavs = await database.executeQuery("public", "deleteNotesFromFavs", [params.notesIds]);
+        if (resultFavs) {
+          console.log("Notas eliminadas de favoritos");
+        } else {
+          return { sts: false, msg: "No se pudo eliminar las notas de favoritos" };
+        }
+
+        const result = await database.executeQuery("public", "deleteNotes", [params.notesIds]);
+        if (result) {
+          return { sts: true, msg: "Notas eliminadas correctamente" };
+        } else {
+          return { sts: false, msg: "No se pudo eliminar las notas" };
+        }
+      } catch (error) {
+        console.error("Error en deleteNotes:", error);
+        return { sts: false, msg: "Error al eliminar las notas" };
       }
     }
 }
