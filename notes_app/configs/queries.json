@@ -6,6 +6,10 @@
             "createNote": "INSERT INTO notes(title, description, date, private, fk_id_user, content, fk_id_weight) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id_note",
             "updateNote": "UPDATE notes set title = $1, description = $2, private = $3, content = $4, fk_id_weight = $5, date =$6 where id_note = $7",
             "deleteNote": "DELETE FROM notes WHERE id_note = $1",
+
+            "deleteNotes": "DELETE FROM notes WHERE id_note = ANY($1::int[])",
+            "deleteNotesFromFavs": "DELETE FROM favorites WHERE fk_id_note = ANY($1::int[])",
+
             "deleteNoteFromFolder": "DELETE FROM category_note WHERE fk_id_note = $1",
             "deleteNoteFromFavs": "DELETE FROM favorites WHERE fk_id_note = $1",
             "addFavorite": "INSERT INTO favorites(fk_id_user, fk_id_note) values($1, $2)",
@@ -13,13 +17,15 @@
             "getAllUserNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date, n.private, w.id_weight, w.weight from notes as n inner join security.user as us on n.fk_id_user = us.id_user inner join weight as w on w.id_weight = n.fk_id_weight where us.id_user = $1 ORDER BY w.id_weight ASC, n.title ASC",
             "getPublicNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date, n.private, w.id_weight, w.weight, us.id_user, us.username from notes as n inner join security.user as us on n.fk_id_user = us.id_user inner join weight as w on w.id_weight = n.fk_id_weight where n.private = false ORDER BY n.title ASC",
             "getFavUserNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date from notes as n inner join favorites as f on f.fk_id_note = n.id_note where f.fk_id_user = $1 ORDER BY n.title ASC", 
+            
             "getNotesByFolder": "SELECT n.id_note, n.title, n.description, n.content, n.date, us.id_user, us.username, c.id_category, c.category, n.private, w.id_weight, w.weight FROM notes as n INNER JOIN category_note as cn on cn.fk_id_note = n.id_note inner join categories as c on c.id_category = cn.fk_id_category inner join security.user as us on us.id_user = n.fk_id_user inner join weight as w on w.id_weight = n.fk_id_weight where c.id_category = $1 ORDER BY w.id_weight ASC, n.title ASC",
+            
             "getUserFolders": "SELECT * FROM categories WHERE fk_id_user = $1 ORDER BY id_category",
             "createFolder": "insert into categories (category, fk_id_user) values ($1, $2)",
             "updateFolder": "update categories set category = $2 where id_category = $1",
             "deleteFolder": "DELETE FROM categories WHERE id_category = $1",
             "deleteFolderNotes": "DELETE FROM category_note WHERE fk_id_category = $1",
-            "assignNoteFolder": "INSERT INTO category_note(fk_id_note, fk_id_category) values($1, $2)",
+            "assignNoteFolder": "INSERT INTO category_note(fk_id_category, fk_id_note) values($1, $2)",
             "getPeople": "SELECT p.id_person, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname FROM person as p",
             "updatePerson": "UPDATE public.person SET name = $1, last_name = $2 WHERE id_person = $3",
             "deletePerson": "DELETE FROM public.person WHERE id_person =  $1",
