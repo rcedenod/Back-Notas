@@ -127,74 +127,96 @@ const UserBO = class {
       }
     }    
   
-  async deleteUsers(params) {
-    try {
-      if (!params.ids || !Array.isArray(params.ids) || params.ids.length === 0) {
-        return { sts: false, msg: "Faltan datos obligatorios" };
-      }
-      // params.ids es un arreglo de id_user a eliminar, ej: [22, 23, 45]
-
-      // 1) Obtener id_person asociados (para luego eliminar de public.person)
-      const userInfoResult = await database.executeQuery("security","getUserById",[params.ids]);
-      if (!userInfoResult || !userInfoResult.rows || userInfoResult.rows.length === 0) {
-        return { sts: false, msg: "No se encontraron los usuarios" };
-      }
-      // userInfoResult.rows es un array de objetos { id_user, fk_id_person }
-      const idPersons = userInfoResult.rows.map(u => u.fk_id_person);
-
-      // 2) Obtener todos los id_note que pertenecen a esos usuarios
-      const notesResult = await database.executeQuery(
-        "public",
-        "getAllUserNotes",   // ya existe en tu JSON: SELECT ... WHERE pk_id_user = $1
-        [params.ids]         // En getAllUserNotes se espera un solo $1, pero como $$1 es ANY($1::int[])
-      );
-      // Importante: getAllUserNotes debe definirse así para aceptar ARRAY:
-      //   "getAllUserNotes": "SELECT id_note FROM notes WHERE fk_id_user = ANY($1::int[])"
-      if (!notesResult || !notesResult.rows) {
-        return { sts: false, msg: "Error al obtener notas de usuario" };
-      }
-      const noteIds = notesResult.rows.map(row => row.id_note);
-      // si no hay notas, noteIds es []
-
-      // 3) Borrar dependencias en favorites y category_note
-      if (noteIds.length > 0) {
-        // 3a) Eliminar de favorites donde fk_id_note está en noteIds
-        await database.executeQuery(
-          "public",
-          "deleteFavoritesByNoteIds",
-          [noteIds]
-        );
-        // 3b) Eliminar de category_note donde fk_id_note está en noteIds
-        await database.executeQuery(
-          "public",
-          "deleteCategoryNoteByNoteIds",
-          [noteIds]
-        );
-        // 3c) Borrar las notas en sí
-        await database.executeQuery(
-          "public",
-          "deleteNotesByUserIds",
-          [params.ids]
-        );
-        // Nota: deleteNotesByUserIds debe definirse como:
-        //   DELETE FROM notes WHERE fk_id_user = ANY($1::int[])
-      }
-
-      // 4) Borrar relaciones de perfil y usuario
-      await database.executeQuery("security", "deleteUserProfileByUserId", [
-        params.ids
-      ]);
-      await database.executeQuery("security", "deleteUser", [params.ids]);
-
-      // 5) Borrar persona(s) en public.person
-      await database.executeQuery("public", "deletePerson", [idPersons]);
-
-      return { sts: true, msg: "Usuarios y sus notas eliminados correctamente" };
-    } catch (error) {
-      console.error("Error en deleteUsers:", error);
-      return { sts: false, msg: "Error al eliminar los usuarios y sus notas" };
+async deleteUsers(params) {
+  try {
+    const { userId, personId } = params;
+    if (!userId || !personId) {
+      console.log("deleteUsers recibió params incorrectos:", params);
+      return { sts: false, msg: "Faltan datos obligatorios" };
     }
+
+    // 1) Obtener todos los id_note del usuario
+    const notesResult = await database.executeQuery(
+      "public",
+      "getNotesByUser",
+      [userId]
+    );
+    if (!notesResult || !notesResult.rows) {
+      return { sts: false, msg: "Error al obtener las notas del usuario" };
+    }
+    const noteIds = notesResult.rows.map(r => r.id_note); // ej. [12, 34, 56]
+
+    // 2) Borrar dependencias de las notas (favorites y category_note)
+    if (noteIds.length > 0) {
+      // Construir literal de arreglo: "{12,34,56}"
+      const pgNoteIds = `{${noteIds.join(",")}}`;
+
+      // a) Eliminar de favorites
+      await database.executeQuery(
+        "public",
+        "deleteFavoritesByNoteIds",
+        [pgNoteIds]
+      );
+
+      // b) Eliminar de category_note
+      await database.executeQuery(
+        "public",
+        "deleteCategoryNoteByNoteIds",
+        [pgNoteIds]
+      );
+    }
+
+    // 3) Borrar las notas en sí (entero)
+    await database.executeQuery(
+      "public",
+      "deleteNotesByUser",
+      [userId]
+    );
+
+    // 4) Borrar las carpetas (entero)
+    await database.executeQuery(
+      "public",
+      "deleteCategoriesByUser",
+      [userId]
+    );
+
+    // 5) Borrar historial de auditoría (entero)
+    await database.executeQuery(
+      "security",
+      "deleteAuditByUser",
+      [userId]
+    );
+
+    // 6) Borrar user_profile (entero)
+    await database.executeQuery(
+      "security",
+      "deleteUserProfileByUserId",
+      [userId]
+    );
+
+    // 7) Borrar el usuario (entero)
+    await database.executeQuery(
+      "security",
+      "deleteUser",
+      [userId]
+    );
+
+    // 8) Borrar la persona (entero)
+    await database.executeQuery(
+      "public",
+      "deletePerson",
+      [personId]
+    );
+
+    return { sts: true, msg: "Usuario y sus dependencias eliminados correctamente" };
+  } catch (error) {
+    console.error("Error en deleteUsers:", error);
+    return { sts: false, msg: "Error al eliminar el usuario y sus datos" };
   }
+}
+
+
+
 };
   
   module.exports = UserBO;

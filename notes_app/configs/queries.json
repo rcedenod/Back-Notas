@@ -22,12 +22,14 @@
             "assignNoteFolder": "INSERT INTO category_note(fk_id_note, fk_id_category) values($1, $2)",
             "getPeople": "SELECT p.id_person, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname FROM person as p",
             "updatePerson": "UPDATE public.person SET name = $1, last_name = $2 WHERE id_person = $3",
-            "deletePerson": "DELETE FROM public.person WHERE id_person =  ANY($1::int[])",
+            "deletePerson": "DELETE FROM public.person WHERE id_person =  $1",
             "getPersonById": "SELECT * FROM public.person as p INNER JOIN security.user as u ON u.fk_id_person = p.id_person WHERE u.id_user = $1",
-            "getAllNotesUser": "SELECT n.id_note FROM notes n WHERE n.fk_id_user = ANY($1::int[])",
+            "getNotesByUser": "SELECT id_note FROM notes WHERE fk_id_user = $1",
             "deleteFavoritesByNoteIds": "DELETE FROM favorites WHERE fk_id_note = ANY($1::int[])",
             "deleteCategoryNoteByNoteIds": "DELETE FROM category_note WHERE fk_id_note = ANY($1::int[])",
-            "deleteNotesByUserIds": "DELETE FROM notes WHERE fk_id_user = ANY($1::int[])"
+            "deleteNotesByUser": "DELETE FROM notes WHERE fk_id_user = $1",
+            "deleteCategoriesByUser": "DELETE FROM categories WHERE fk_id_user = $1",
+            "deleteAuditByUser": "DELETE FROM security.audit WHERE fk_id_user = $1"
         },
     "security":
         {
@@ -46,8 +48,8 @@
             "createUserProfile": "INSERT INTO security.user_profile (fk_id_user, fk_id_profile) VALUES ($1, $2)",
             "updateUser": "UPDATE security.user SET email = $1, password = $2, username = $3 WHERE id_user = $4",
             "updateUserProfile": "UPDATE security.user_profile SET fk_id_profile = $1 WHERE fk_id_user = $2",
-            "deleteUserProfileByUserId": "DELETE FROM security.user_profile WHERE fk_id_user =  ANY($1::int[])",
-            "deleteUser": "DELETE FROM security.user WHERE id_user = ANY($1::int[])",
+            "deleteUserProfileByUserId": "DELETE FROM security.user_profile WHERE fk_id_user = $1",
+            "deleteUser": "DELETE FROM security.user WHERE id_user = $1",
             "getUserById": "SELECT id_user, fk_id_person FROM security.user WHERE id_user = ANY($1::int[])",
             "getMenus": "SELECT me.id_menu, me.menu, mo.module, mo.id_module FROM security.menu me INNER JOIN security.module mo ON mo.id_module = me.fk_id_module",
             "getModules": "SELECT * FROM security.module",
@@ -72,6 +74,7 @@
             "updatePermissionMenu": "UPDATE security.permission_menu SET fk_id_profile = $1, fk_id_menu = $2 WHERE id_permission_method = $3",
             "deletePermissionMenus": "DELETE FROM security.permission_menu WHERE id_permission_method = ANY($1::int[])",
             "insertAudit": "INSERT INTO security.audit(fk_id_user, method, fk_id_profile, date) values($1,$2,$3,$4::TIMESTAMP)",
-            "getAudits": "select a.id_audit, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname, a.method, pr.id_profile, pr.profile, a.date from security.audit as a inner join security.profile as pr on pr.id_profile = a.fk_id_profile inner join security.user as u on u.id_user = a.fk_id_user inner join person as p on p.id_person = u.fk_id_person"
+            "getAudits": "select a.id_audit, p.name, p.last_name, CONCAT(p.name, ' ', p.last_name) AS fullname, a.method, pr.id_profile, pr.profile, a.date from security.audit as a inner join security.profile as pr on pr.id_profile = a.fk_id_profile inner join security.user as u on u.id_user = a.fk_id_user inner join person as p on p.id_person = u.fk_id_person",
+            "deleteAuditByUser": "DELETE FROM security.audit WHERE fk_id_user = $1"
         }
 }

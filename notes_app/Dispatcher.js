@@ -147,10 +147,7 @@ app.post('/createUser', async (req, res) => {
 
       if (userProfileResult && userProfileResult.rowCount > 0) {
         console.log(`El usuario ${email} fue creado correctamente`);
-        return res.json({
-          sts: true,
-          msg: 'Usuario creado correctamente',
-        });
+        return res.status(200).json({ sts: true, msg: 'Usuario creado correctamente' });
       } else {
         return res
           .status(500)
