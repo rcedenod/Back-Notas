@@ -76,6 +76,68 @@ const NoteBO = class {
             return { sts: false, msg: "Error al ejecutar la consulta" };
           }
     }
+
+    async addFavorite(params) {
+      try {
+          const result = await database.executeQuery("public", "addFavorite", [
+            ss.sessionObject.userId,
+            params.noteId
+          ]);
+
+          if (result && result.rowCount > 0) {
+            console.log("Nota insertada en favoritos");
+          } else {
+            return { sts: false, msg: "No se pudo insertar la nota en favoritos" };
+          }
+
+        return { sts: true, msg: "Nota insertada en favoritos" };
+        
+      } catch (error) {
+        console.error("Error en addFavorite:", error);
+        return { sts: false, msg: "Error al añadir a favoritos" };
+      }
+    }
+
+    async removeFavorite(params) {
+      try {
+          const result = await database.executeQuery("public", "removeFavorite", [
+            params.noteId,
+            ss.sessionObject.userId
+          ]);
+
+          if (result && result.rowCount > 0) {
+            console.log("Nota quitada de favoritos");
+          } else {
+            return { sts: false, msg: "No se pudo quitar la nota de favoritos" };
+          }
+
+        return { sts: true, msg: "Nota quitada de favoritos" };
+        
+      } catch (error) {
+        console.error("Error en removeFavorite:", error);
+        return { sts: false, msg: "Error al quitar de favoritos" };
+      }
+    }
+
+    async isInFavorites(params){
+        try {
+            const result = await database.executeQuery("public", "isInFavorites", [
+              params.noteId,
+              ss.sessionObject.userId
+            ]);
+        
+            if (!result || !result.rows) {
+              console.error("La consulta no devolvio resultados");
+              return { sts: false, msg: "Error al obtener si esta en favoritos" };
+            }
+        
+            return { sts: true, data: result.rows };
+
+          } catch (error) {
+            console.error("Error en isInFavorites:", error);
+            return { sts: false, msg: "Error al ejecutar la consulta" };
+          }
+    }
   
     async createNote(params) {
       try {

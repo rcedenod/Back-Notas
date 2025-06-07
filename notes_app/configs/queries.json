@@ -6,14 +6,16 @@
             "createNote": "INSERT INTO notes(title, description, date, private, fk_id_user, content, fk_id_weight) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id_note",
             "updateNote": "UPDATE notes set title = $1, description = $2, private = $3, content = $4, fk_id_weight = $5, date =$6 where id_note = $7",
             "deleteNote": "DELETE FROM notes WHERE id_note = $1",
-
+            "getFolder": "select * from categories where id_category = $1",
             "deleteNotes": "DELETE FROM notes WHERE id_note = ANY($1::int[])",
             "deleteNotesFromFavs": "DELETE FROM favorites WHERE fk_id_note = ANY($1::int[])",
+
+            "isInFavorites": "SELECT * FROM favorites WHERE fk_id_note = $1 and fk_id_user = $2",
 
             "deleteNoteFromFolder": "DELETE FROM category_note WHERE fk_id_note = $1",
             "deleteNoteFromFavs": "DELETE FROM favorites WHERE fk_id_note = $1",
             "addFavorite": "INSERT INTO favorites(fk_id_user, fk_id_note) values($1, $2)",
-            "removeFavorite": "DELETE FROM favorites where id_favorite = $1",
+            "removeFavorite": "DELETE FROM favorites where fk_id_note = $1 and fk_id_user = $2",
             "getAllUserNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date, n.private, w.id_weight, w.weight from notes as n inner join security.user as us on n.fk_id_user = us.id_user inner join weight as w on w.id_weight = n.fk_id_weight where us.id_user = $1 ORDER BY w.id_weight ASC, n.title ASC",
             "getPublicNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date, n.private, w.id_weight, w.weight, us.id_user, us.username from notes as n inner join security.user as us on n.fk_id_user = us.id_user inner join weight as w on w.id_weight = n.fk_id_weight where n.private = false ORDER BY n.title ASC",
             "getFavUserNotes": "SELECT n.id_note, n.title, n.description, n.content, n.date from notes as n inner join favorites as f on f.fk_id_note = n.id_note where f.fk_id_user = $1 ORDER BY n.title ASC", 
