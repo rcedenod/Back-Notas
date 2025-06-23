@@ -1,12 +1,12 @@
 const express = require('express');
 let fs = require("fs");
 const nodemailer = require('nodemailer');
-
 const app = express();
 const cors = require('cors');
 const session = require('express-session');
 const { profile } = require('console');
 const port = 3000;
+require('dotenv').config();
 
 app.use(cors({
   origin: "http://localhost:5173",
